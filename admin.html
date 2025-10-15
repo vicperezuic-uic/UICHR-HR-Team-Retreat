@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Panel - UIC Quiz</title>
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;margin:0;padding:20px;}
+h1{color:#d50032;}
+table{width:100%;border-collapse:collapse;margin-top:20px;background:white;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+th,td{border:1px solid #ddd;padding:10px;text-align:left;font-size:14px;}
+th{background:#d50032;color:white;}
+button{background:#d50032;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;margin-top:10px;}
+button:hover{background:#a00025;}
+</style>
+</head>
+<body>
+<h1>Admin Dashboard</h1>
+<p>Welcome, admin. Below are all quiz submissions.</p>
+<button id="downloadBtn">⬇ Download as CSV</button>
+<table>
+  <thead id="tableHead"></thead>
+  <tbody id="submissionTable"></tbody>
+</table>
+
+<script>
+// --- Simple login ---
+const allowedEmail="vicperez@uic.edu";
+const allowedPassword="Jujub1234!";
+if(prompt("Enter admin email:")!==allowedEmail || prompt("Enter admin password:")!==allowedPassword){
+  alert("Access denied."); document.body.innerHTML="<h2>Unauthorized</h2>"; throw new Error("Unauthorized access");
+}
+
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxEX2GENHarqlBBR3OT8O7D6A4t-jAArcZAKyUd-VIuIspBuTc2tJtlpOxveCGjLlQU/exec";
+
+fetch(SCRIPT_URL)
+.then(res=>res.json())
+.then(data=>{
+  if(!data||data.length===0){ alert("No submissions yet."); return; }
+
+  const tableHead=document.getElementById("tableHead");
+  const tableBody=document.getElementById("submissionTable");
+  tableHead.innerHTML=""; tableBody.innerHTML="";
+
+  // Headers
+  const headRow=document.createElement("tr");
+  Object.keys(data[0]).forEach(key=>{ const th=document.createElement("th"); th.textContent=key; headRow.appendChild(th); });
+  tableHead.appendChild(headRow);
+
+  // Rows
+  data.forEach(row=>{
+    const tr=document.createElement("tr");
+    Object.values(row).forEach(val=>{ const td=document.createElement("td"); td.textContent=val??""; tr.appendChild(td); });
+    tableBody.appendChild(tr);
+  });
+
+  // CSV download
+  document.getElementById("downloadBtn").onclick=()=>{
+    let csv=Object.keys(data[0]).join(",")+"\n";
+    data.forEach(row=>{ csv+=Object.values(row).map(v=>`"${v}"`).join(",")+"\n"; });
+    const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="UIC_Quiz_Responses.csv"; a.click();
+  };
+})
+.catch(err=>{ console.error(err); alert("Error loading submissions."); });
+</script>
+</body>
+</html>
