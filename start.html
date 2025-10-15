@@ -5,16 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Start Quiz - UIC</title>
 <style>
-body { font-family: 'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; background:#f4f6f9; margin:0; }
-.container { background:white; padding:30px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; width:320px; }
-input { padding:10px; margin:10px 0; width:100%; border-radius:6px; border:1px solid #ccc; }
-button { background:#d50032; color:white; border:none; padding:12px 20px; border-radius:8px; cursor:pointer; font-size:16px; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:#f4f6f9;
+}
+.container {
+  background:white;
+  padding:30px;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  text-align:center;
+}
+input {
+  padding:10px;
+  margin:10px 0;
+  width:100%;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+button {
+  background:#d50032;
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+}
 button:hover { background:#a00025; }
 img { width:150px; position:absolute; top:20px; left:20px; }
 </style>
 </head>
 <body>
-<img src="uic_logo.jpg" alt="UIC Logo">
+<img src="https://www.uic.edu/sites/default/files/styles/uic-logo/public/uic-logo.png" alt="UIC Logo">
 <div class="container">
   <h2>Enter your email to start the UIC Quiz</h2>
   <input type="email" id="emailInput" placeholder="Enter your email" required>
@@ -22,15 +49,34 @@ img { width:150px; position:absolute; top:20px; left:20px; }
 </div>
 
 <script>
-function startQuiz() {
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec";
+
+async function startQuiz() {
   const email = document.getElementById("emailInput").value.trim();
-  if(!email){ alert("Please enter your email."); return; }
+  if(!email){ 
+    alert("Please enter your email.");
+    return; 
+  }
 
-  const submissions = JSON.parse(localStorage.getItem("quizSubmissions") || "{}");
-  if(submissions[email]) { alert("You have already submitted."); return; }
+  try {
+    // Check if email already submitted
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    const emailIndex = data[0].indexOf("Email"); // Find Email column
+    const submittedEmails = data.slice(1).map(row => row[emailIndex]);
 
-  localStorage.setItem("currentUser", email);
-  window.location.href = "index.html";
+    if(submittedEmails.includes(email)){
+      alert("You have already submitted the quiz. You cannot retake it.");
+      return;
+    }
+
+    // Save email and go to quiz
+    localStorage.setItem("currentUser", email);
+    window.location.href = "index.html";
+
+  } catch(err) {
+    alert("Error checking submissions: " + err.message);
+  }
 }
 </script>
 </body>

@@ -5,64 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin Panel - UIC Quiz</title>
 <style>
-body{font-family:'Segoe UI',sans-serif;background:#f4f6f9;margin:0;padding:20px;}
-h1{color:#d50032;}
-table{width:100%;border-collapse:collapse;margin-top:20px;background:white;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-th,td{border:1px solid #ddd;padding:10px;text-align:left;font-size:14px;}
-th{background:#d50032;color:white;}
-button{background:#d50032;color:white;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;margin-top:10px;}
-button:hover{background:#a00025;}
+  body { font-family: 'Segoe UI', sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+  h1 { color: #d50032; }
+  table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
+  th { background: #d50032; color: white; position: sticky; top: 0; z-index: 1; }
+  tr:nth-child(even) { background-color: #f9f9f9; }
 </style>
 </head>
 <body>
-<h1>Admin Dashboard</h1>
-<p>Welcome, admin. Below are all quiz submissions.</p>
-<button id="downloadBtn">⬇ Download as CSV</button>
-<table>
-  <thead id="tableHead"></thead>
-  <tbody id="submissionTable"></tbody>
-</table>
+<h1>Admin Dashboard - UIC Quiz</h1>
 
 <script>
-// --- Simple login ---
-const allowedEmail="vicperez@uic.edu";
-const allowedPassword="Jujub1234!";
-if(prompt("Enter admin email:")!==allowedEmail || prompt("Enter admin password:")!==allowedPassword){
-  alert("Access denied."); document.body.innerHTML="<h2>Unauthorized</h2>"; throw new Error("Unauthorized access");
-}
+  // Simple admin login
+  const adminEmail = prompt("Enter admin email:");
+  const adminPass = prompt("Enter admin password:");
+  if(adminEmail !== "vicperez@uic.edu" || adminPass !== "Jujub1234!") {
+    document.body.innerHTML = "<h2>Access Denied</h2>";
+    throw new Error("Unauthorized");
+  }
 
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec";
 
-fetch(https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec)
-.then(res=>res.json())
-.then(data=>{
-  if(!data||data.length===0){ alert("No submissions yet."); return; }
+  // Fetch submissions from Google Sheet
+  fetch(WEB_APP_URL)
+    .then(res => res.json())
+    .then(data => renderTable(data))
+    .catch(err => alert("Error loading submissions: " + err.message));
 
-  const tableHead=document.getElementById("tableHead");
-  const tableBody=document.getElementById("submissionTable");
-  tableHead.innerHTML=""; tableBody.innerHTML="";
+  function renderTable(data) {
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const tbody = document.createElement("tbody");
 
-  // Headers
-  const headRow=document.createElement("tr");
-  Object.keys(data[0]).forEach(key=>{ const th=document.createElement("th"); th.textContent=key; headRow.appendChild(th); });
-  tableHead.appendChild(headRow);
+    // Header row from first row of sheet
+    const headerRow = document.createElement("tr");
+    data[0].forEach(header => {
+      const th = document.createElement("th");
+      th.textContent = header;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-  // Rows
-  data.forEach(row=>{
-    const tr=document.createElement("tr");
-    Object.values(row).forEach(val=>{ const td=document.createElement("td"); td.textContent=val??""; tr.appendChild(td); });
-    tableBody.appendChild(tr);
-  });
-
-  // CSV download
-  document.getElementById("downloadBtn").onclick=()=>{
-    let csv=Object.keys(data[0]).join(",")+"\n";
-    data.forEach(row=>{ csv+=Object.values(row).map(v=>`"${v}"`).join(",")+"\n"; });
-    const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
-    const a=document.createElement("a"); a.href=url; a.download="UIC_Quiz_Responses.csv"; a.click();
-  };
-})
-.catch(err=>{ console.error(err); alert("Error loading submissions."); });
+    // Data rows
+    for(let i=1; i<data.length; i++){
+      const row = document.createElement("tr");
+      data[i].forEach(cell => {
+        const td = document.createElement("td");
+        td.textContent = cell;
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    document.body.appendChild(table);
+  }
 </script>
 </body>
 </html>
