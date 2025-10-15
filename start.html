@@ -3,45 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <title>UIC Song Quiz - Start</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5;
-          display: flex; align-items: center; justify-content: center; height: 100vh;}
-    .container {background: white; padding: 2rem; border-radius: 12px; 
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; width: 350px; position: relative;}
-    .logo {position: absolute; top: 15px; left: 15px; width: 60px;}
-    input[type="email"] {padding: 10px; width: 100%; margin: 1rem 0; border: 1px solid #ccc; border-radius: 6px;}
-    button {background: #cc0000; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;}
-    button:hover {background: #990000;}
-    .error {color: red; margin-top: 10px;}
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
+    header { display: flex; align-items: center; margin-bottom: 20px; }
+    header img { height: 50px; margin-right: 15px; }
+    .container { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    input[type=email] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; }
+    button { background: #ba0c2f; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+    button:hover { background: #8a0922; }
+    .error { color: red; margin-bottom: 10px; }
   </style>
 </head>
 <body>
+  <header>
+    <img src="uic_logo.jpg" alt="UIC Logo">
+    <h2>UIC Song Quiz</h2>
+  </header>
   <div class="container">
-    <img src="uic_logo.jpg" class="logo" alt="UIC Logo">
-    <h2>Welcome to the UIC Song Quiz</h2>
-    <p>Please enter your UIC email to begin.</p>
-    <form id="startForm">
-      <input type="email" id="email" placeholder="Enter your UIC email" required>
-      <button type="submit">Start Quiz</button>
-      <div class="error" id="errorMsg"></div>
-    </form>
+    <h3>Enter your UIC Email to Start</h3>
+    <div id="error" class="error"></div>
+    <input type="email" id="email" placeholder="yourname@uic.edu" required>
+    <button onclick="startQuiz()">Start Quiz</button>
   </div>
-
   <script>
-    document.getElementById("startForm").addEventListener("submit", function(event) {
-      event.preventDefault();
-      const emailInput = document.getElementById("email");
-      const errorMsg = document.getElementById("errorMsg");
-      const email = emailInput.value.trim().toLowerCase(); // ✅ case-insensitive
+    function startQuiz() {
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const errorDiv = document.getElementById("error");
+      errorDiv.textContent = "";
 
       if (!email.endsWith("@uic.edu")) {
-        errorMsg.textContent = "Please use a valid @uic.edu email address.";
+        errorDiv.textContent = "Please enter a valid UIC email (@uic.edu).";
         return;
       }
 
-      localStorage.setItem("userEmail", email);
+      if (localStorage.getItem("submission_" + email)) {
+        errorDiv.textContent = "You have already submitted. Please contact admin if you need a reset.";
+        return;
+      }
+
+      localStorage.setItem("currentUser", email);
       window.location.href = "index.html";
-    });
+    }
   </script>
 </body>
 </html>

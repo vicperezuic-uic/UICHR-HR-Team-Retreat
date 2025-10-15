@@ -2,68 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>UIC Quiz Admin</title>
+  <title>UIC Song Quiz - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {font-family: Arial, sans-serif; margin: 20px;}
-    .hidden {display: none;}
-    button {margin-top: 5px; padding: 5px 10px; background: #cc0000; color: white; border: none; border-radius: 6px;}
-    button:hover {background: #990000;}
-    .logo {position: absolute; top: 15px; left: 15px; width: 60px;}
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
+    header { display: flex; align-items: center; margin-bottom: 20px; }
+    header img { height: 50px; margin-right: 15px; }
+    .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+    button { background: #ba0c2f; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #8a0922; }
+    #loginDiv { max-width: 400px; margin: auto; }
+    input[type=text], input[type=password] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <img src="uic_logo.jpg" class="logo" alt="UIC Logo">
-  <h2>UIC Song Quiz - Admin</h2>
-
-  <div id="login">
-    <input type="email" id="adminEmail" placeholder="Admin Email"><br>
-    <input type="password" id="adminPass" placeholder="Password"><br>
-    <button onclick="adminLogin()">Login</button>
-    <p id="loginError" style="color:red;"></p>
+  <header>
+    <img src="uic_logo.jpg" alt="UIC Logo">
+    <h2>Admin Dashboard</h2>
+  </header>
+  <div class="container">
+    <div id="loginDiv">
+      <h3>Admin Login</h3>
+      <input type="text" id="adminEmail" placeholder="Email">
+      <input type="password" id="adminPass" placeholder="Password">
+      <button onclick="login()">Login</button>
+      <div id="loginError" style="color:red;"></div>
+    </div>
+    <div id="dashboard" style="display:none;">
+      <h3>Submissions</h3>
+      <table>
+        <thead>
+          <tr><th>Email</th><th>Score</th><th>Date</th><th>Action</th></tr>
+        </thead>
+        <tbody id="submissionsBody"></tbody>
+      </table>
+    </div>
   </div>
-
-  <div id="dashboard" class="hidden">
-    <h3>Submissions</h3>
-    <div id="submissionsList"></div>
-  </div>
-
   <script>
     const ADMIN_EMAIL = "vicperez@uic.edu";
     const ADMIN_PASS = "Jujub1234!";
 
-    function adminLogin() {
-      const email = (document.getElementById("adminEmail").value || "").toLowerCase();
+    function login() {
+      const email = document.getElementById("adminEmail").value.trim().toLowerCase();
       const pass = document.getElementById("adminPass").value;
       if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        renderSubmissions();
+        document.getElementById("loginDiv").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        loadSubmissions();
       } else {
-        document.getElementById("loginError").textContent = "Invalid login.";
+        document.getElementById("loginError").textContent = "Invalid credentials.";
       }
     }
 
-    function renderSubmissions() {
-      const submissions = JSON.parse(localStorage.getItem("submissions") || "{}");
-      const container = document.getElementById("submissionsList");
-      container.innerHTML = "";
-      for (const email in submissions) {
-        const entry = submissions[email];
-        const div = document.createElement("div");
-        div.innerHTML = `
-          <p><b>${email}</b> — Score: ${entry.score} — Submitted: ${entry.timestamp}</p>
-          <button onclick="resetUser('${email}')">Reset Submission</button>
-          <hr>
-        `;
-        container.appendChild(div);
+    function loadSubmissions() {
+      const body = document.getElementById("submissionsBody");
+      body.innerHTML = "";
+      for (let i=0; i<localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("submission_")) {
+          const data = JSON.parse(localStorage.getItem(key));
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${data.email}</td><td>${data.score}</td><td>${data.date}</td>
+            <td><button onclick="resetUser('${data.email}')">Reset</button></td>`;
+          body.appendChild(tr);
+        }
       }
     }
 
     function resetUser(email) {
-      const submissions = JSON.parse(localStorage.getItem("submissions") || "{}");
-      delete submissions[email];
-      localStorage.setItem("submissions", JSON.stringify(submissions));
-      renderSubmissions();
+      localStorage.removeItem("submission_" + email);
+      alert("Submission reset for " + email);
+      loadSubmissions();
     }
   </script>
 </body>

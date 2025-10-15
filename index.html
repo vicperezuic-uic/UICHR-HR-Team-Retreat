@@ -3,84 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <title>UIC Song Quiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5;}
-    .container {max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative;}
-    .logo {position: absolute; top: 15px; left: 15px; width: 60px;}
-    .question {margin-bottom: 20px;}
-    input[type="text"] {width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;}
-    label {display: block; margin: 5px 0;}
-    button {background: #cc0000; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer;}
-    button:hover {background: #990000;}
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
+    header { display: flex; align-items: center; margin-bottom: 20px; }
+    header img { height: 50px; margin-right: 15px; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .question { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
+    input[type=text] { width: 100%; padding: 8px; margin: 5px 0 10px; border: 1px solid #ccc; border-radius: 4px; }
+    label { display: block; margin: 5px 0; }
+    button { background: #ba0c2f; color: #fff; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+    button:hover { background: #8a0922; }
+    .success { color: green; font-weight: bold; margin-top: 15px; }
   </style>
 </head>
 <body>
-  <div class="container" id="quizContainer">
-    <img src="uic_logo.jpg" class="logo" alt="UIC Logo">
+  <header>
+    <img src="uic_logo.jpg" alt="UIC Logo">
     <h2>UIC Song Quiz</h2>
-    <form id="quizForm"></form>
-    <button type="submit" form="quizForm" id="submitQuiz">Submit Quiz</button>
-    <div id="result"></div>
+  </header>
+  <div class="container">
+    <form id="quizForm">
+      <div id="questionsContainer"></div>
+      <button type="submit">Submit Quiz</button>
+      <div id="message" class="success"></div>
+    </form>
   </div>
-
   <script src="questions.js"></script>
   <script>
-    const userEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
-    if (!userEmail) window.location.href = "start.html";
+    const userEmail = localStorage.getItem("currentUser");
+    if (!userEmail) { window.location.href = "start.html"; }
 
-    const submissions = JSON.parse(localStorage.getItem("submissions") || "{}");
-    if (submissions[userEmail]) {
-      document.body.innerHTML = `<div style="text-align:center;margin-top:100px;">
-        <h2>You have already submitted the quiz.</h2>
-        <p>If this is an error, please contact the administrator.</p>
-      </div>`;
-    } else {
-      const form = document.getElementById("quizForm");
+    const container = document.getElementById("questionsContainer");
+    questions.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.className = "question";
+      div.innerHTML = `
+        <h4>Question ${i+1}</h4>
+        <label>Song Name:</label>
+        <input type="text" name="song_${i}" maxlength="250" placeholder="Enter song name">
+        <label>Requested By:</label>
+        ${q.choices.map(c => `<label><input type="radio" name="req_${i}" value="${c}"> ${c}</label>`).join("")}
+      `;
+      container.appendChild(div);
+    });
 
-      // Render questions
+    document.getElementById("quizForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      let score = 0;
+      let answers = [];
+
       questions.forEach((q, i) => {
-        const div = document.createElement("div");
-        div.className = "question";
-        div.innerHTML = `
-          <p><b>Q${i+1}:</b> Song Name</p>
-          <input type="text" name="song_${i}" maxlength="250" required>
-          <p><b>Requested By:</b></p>
-          ${q.choices.map(c => `
-            <label><input type="radio" name="req_${i}" value="${c}" required> ${c}</label>
-          `).join("")}
-        `;
-        form.appendChild(div);
+        const song = (document.querySelector(`[name=song_${i}]`).value || "").trim().toLowerCase();
+        const req = document.querySelector(`[name=req_${i}]:checked`);
+        const reqVal = req ? req.value : "";
+
+        let songCorrect = (song === q.correctSong.toLowerCase());
+        let reqCorrect = (reqVal === q.correctRequester);
+
+        if (songCorrect) score++;
+        if (reqCorrect) score++;
+
+        answers.push({songAnswer: song, reqAnswer: reqVal, songCorrect, reqCorrect});
       });
 
-      form.addEventListener("submit", function(e) {
-        e.preventDefault(); // ✅ prevent page refresh
-        let score = 0;
-        const answers = {};
-
-        questions.forEach((q, i) => {
-          const songAns = form[`song_${i}`].value.trim();
-          const reqAns = form[`req_${i}`].value;
-
-          answers[`Q${i+1}`] = {song: songAns, requestedBy: reqAns};
-
-          if (songAns.toLowerCase() === q.song.toLowerCase()) score++;
-          if (reqAns === q.correct) score++;
-        });
-
-        const submissions = JSON.parse(localStorage.getItem("submissions") || "{}");
-        submissions[userEmail] = {
-          email: userEmail,
-          score: score,
-          answers: answers,
-          timestamp: new Date().toISOString()
-        };
-        localStorage.setItem("submissions", JSON.stringify(submissions));
-
-        document.getElementById("quizContainer").innerHTML =
-          `<h2>Thank you for submitting!</h2><p>Your score: ${score}</p>`;
-      });
-    }
+      const result = { email: userEmail, score, answers, date: new Date().toLocaleString() };
+      localStorage.setItem("submission_" + userEmail, JSON.stringify(result));
+      document.getElementById("message").textContent = "Quiz submitted! Your score: " + score;
+    });
   </script>
 </body>
 </html>
