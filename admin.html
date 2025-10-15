@@ -31,9 +31,9 @@ if(prompt("Enter admin email:")!==allowedEmail || prompt("Enter admin password:"
   alert("Access denied."); document.body.innerHTML="<h2>Unauthorized</h2>"; throw new Error("Unauthorized access");
 }
 
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxE3dQsV4-AvK5ie5RArBpH3apV5wlSw1UbXPlYHzgdK7Zuy6NoeN2g-PpjC83fdDOs/exec";
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec";
 
-fetch(SCRIPT_URL)
+fetch(https://script.google.com/macros/s/AKfycbxialNjj-LDHMo6HU9wOoFCQS2llYUF7C8UfKNthTM2ChnJyVDkH7N9cGFAIxi5mtQL/exec)
 .then(res=>res.json())
 .then(data=>{
   if(!data||data.length===0){ alert("No submissions yet."); return; }
