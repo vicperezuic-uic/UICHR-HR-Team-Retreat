@@ -8,10 +8,16 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f9f9f9; }
     header { display: flex; align-items: center; margin-bottom: 20px; }
     header img { height: 50px; margin-right: 15px; }
-    .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #eee; }
+    .container { max-width: 100%; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow-x: auto; }
+    table { border-collapse: collapse; min-width: 1200px; font-size: 12px; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; white-space: nowrap; }
+    th { background: #eee; position: sticky; top: 0; z-index: 3; }
+
+    /* Sticky first 3 columns */
+    td:nth-child(1), th:nth-child(1) { position: sticky; left: 0; background: #fff; z-index: 4; }
+    td:nth-child(2), th:nth-child(2) { position: sticky; left: 100px; background: #fff; z-index: 4; }
+    td:nth-child(3), th:nth-child(3) { position: sticky; left: 200px; background: #fff; z-index: 4; }
+
     button { background: #ba0c2f; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     button:hover { background: #8a0922; }
     #loginDiv { max-width: 400px; margin: auto; }
@@ -33,12 +39,13 @@
     </div>
     <div id="dashboard" style="display:none;">
       <h3>Submissions</h3>
-      <table>
-        <thead>
-          <tr><th>Email</th><th>Score</th><th>Date</th><th>Action</th></tr>
-        </thead>
-        <tbody id="submissionsBody"></tbody>
-      </table>
+      <button onclick="downloadCSV()">Download CSV</button>
+      <div style="overflow-x:auto; max-height:70vh;">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="submissionsBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
   <script>
@@ -59,15 +66,27 @@
 
     function loadSubmissions() {
       const body = document.getElementById("submissionsBody");
+      const head = document.getElementById("tableHead");
       body.innerHTML = "";
+      head.innerHTML = "";
+
+      let headerRow = "<tr><th>Email</th><th>Date</th><th>Score</th>";
+      for (let i=0; i<questions.length; i++) {
+        headerRow += `<th>Q${i+1} Song</th><th>Q${i+1} Requestor</th>`;
+      }
+      headerRow += "<th>Action</th></tr>";
+      head.innerHTML = headerRow;
+
       for (let i=0; i<localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.startsWith("submission_")) {
           const data = JSON.parse(localStorage.getItem(key));
-          const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${data.email}</td><td>${data.score}</td><td>${data.date}</td>
-            <td><button onclick="resetUser('${data.email}')">Reset</button></td>`;
-          body.appendChild(tr);
+          let row = `<tr><td>${data.email}</td><td>${data.date}</td><td>${data.score}</td>`;
+          data.answers.forEach(a => {
+            row += `<td>${a.songAnswer}</td><td>${a.reqAnswer}</td>`;
+          });
+          row += `<td><button onclick="resetUser('${data.email}')">Reset</button></td></tr>`;
+          body.innerHTML += row;
         }
       }
     }
@@ -77,6 +96,38 @@
       alert("Submission reset for " + email);
       loadSubmissions();
     }
+
+    function downloadCSV() {
+      let csv = [];
+      let headers = ["Email","Date","Score"];
+      for (let i=0; i<questions.length; i++) {
+        headers.push(`Q${i+1} Song`);
+        headers.push(`Q${i+1} Requestor`);
+      }
+      csv.push(headers.join(","));
+
+      for (let i=0; i<localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith("submission_")) {
+          const data = JSON.parse(localStorage.getItem(key));
+          let row = [data.email, data.date, data.score];
+          data.answers.forEach(a => {
+            row.push(a.songAnswer || "");
+            row.push(a.reqAnswer || "");
+          });
+          csv.push(row.join(","));
+        }
+      }
+
+      const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "submissions.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
+  <script src="questions.js"></script>
 </body>
 </html>

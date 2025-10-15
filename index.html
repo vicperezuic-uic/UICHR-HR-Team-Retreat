@@ -14,7 +14,6 @@
     label { display: block; margin: 5px 0; }
     button { background: #ba0c2f; color: #fff; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; width: 100%; }
     button:hover { background: #8a0922; }
-    .success { color: green; font-weight: bold; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -26,7 +25,6 @@
     <form id="quizForm">
       <div id="questionsContainer"></div>
       <button type="submit">Submit Quiz</button>
-      <div id="message" class="success"></div>
     </form>
   </div>
   <script src="questions.js"></script>
@@ -69,7 +67,8 @@
 
       const result = { email: userEmail, score, answers, date: new Date().toLocaleString() };
       localStorage.setItem("submission_" + userEmail, JSON.stringify(result));
-      document.getElementById("message").textContent = "Quiz submitted! Your score: " + score;
+      alert("Your form has been submitted. Your score will be totaled shortly.");
+      window.location.href = "start.html";
     });
   </script>
 </body>
