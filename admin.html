@@ -8,9 +8,11 @@
     .hidden {display: none;}
     button {margin-top: 5px; padding: 5px 10px; background: #cc0000; color: white; border: none; border-radius: 6px;}
     button:hover {background: #990000;}
+    .logo {position: absolute; top: 15px; left: 15px; width: 60px;}
   </style>
 </head>
 <body>
+  <img src="uic_logo.jpg" class="logo" alt="UIC Logo">
   <h2>UIC Song Quiz - Admin</h2>
 
   <div id="login">
@@ -30,7 +32,7 @@
     const ADMIN_PASS = "Jujub1234!";
 
     function adminLogin() {
-      const email = document.getElementById("adminEmail").value;
+      const email = (document.getElementById("adminEmail").value || "").toLowerCase();
       const pass = document.getElementById("adminPass").value;
       if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
         document.getElementById("login").classList.add("hidden");

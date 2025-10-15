@@ -6,7 +6,8 @@
   <style>
     body {font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5;}
     .container {max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative;}
+    .logo {position: absolute; top: 15px; left: 15px; width: 60px;}
     .question {margin-bottom: 20px;}
     input[type="text"] {width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;}
     label {display: block; margin: 5px 0;}
@@ -16,15 +17,16 @@
 </head>
 <body>
   <div class="container" id="quizContainer">
+    <img src="uic_logo.jpg" class="logo" alt="UIC Logo">
     <h2>UIC Song Quiz</h2>
     <form id="quizForm"></form>
-    <button id="submitQuiz">Submit Quiz</button>
+    <button type="submit" form="quizForm" id="submitQuiz">Submit Quiz</button>
     <div id="result"></div>
   </div>
 
   <script src="questions.js"></script>
   <script>
-    const userEmail = localStorage.getItem("userEmail");
+    const userEmail = (localStorage.getItem("userEmail") || "").toLowerCase();
     if (!userEmail) window.location.href = "start.html";
 
     const submissions = JSON.parse(localStorage.getItem("submissions") || "{}");
@@ -42,16 +44,17 @@
         div.className = "question";
         div.innerHTML = `
           <p><b>Q${i+1}:</b> Song Name</p>
-          <input type="text" name="song_${i}" maxlength="250">
+          <input type="text" name="song_${i}" maxlength="250" required>
           <p><b>Requested By:</b></p>
-          ${q.choices.map((c, j) => `
-            <label><input type="radio" name="req_${i}" value="${c}"> ${c}</label>
+          ${q.choices.map(c => `
+            <label><input type="radio" name="req_${i}" value="${c}" required> ${c}</label>
           `).join("")}
         `;
         form.appendChild(div);
       });
 
-      document.getElementById("submitQuiz").addEventListener("click", function() {
+      form.addEventListener("submit", function(e) {
+        e.preventDefault(); // ✅ prevent page refresh
         let score = 0;
         const answers = {};
 
